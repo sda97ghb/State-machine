@@ -1,1 +1,194 @@
-../../../StateMachine/doc/index.html
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        p {
+            padding-left: 30px;
+            width: 700px;
+        }
+        .sourcecode {
+            border: solid;
+            border-width: 1px;
+            background-color: #DDD;
+            font-family: monospace;
+            margin-left: 30px;
+            width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <h1>State machine library</h1>
+    <div>
+        <h2>New state defenition</h2>
+        <p>In private section of class:
+        <p><div class="sourcecode">
+            beginState(<i>state name</i>)<br>
+            {<br>
+            <span style="margin-left: 30px"><i>//your state function code</i></span><br>
+            }<br>
+            endState
+        </div>
+        <p>You can define functions inside a state. Different states can have functions with same names,<br>
+        state use its own function when you call it. This functions can be static and you can call it outside of state.
+        <p><div class="sourcecode">
+            beginState(someState)<br>
+            {<br>
+            <span style="margin-left: 30px"><i>//your state function code</i></span><br>
+            <span style="margin-left: 30px">someFunction();</span><br>
+            <span style="margin-left: 30px"><i>//your state function code</i></span><br>
+            }<br>
+            <br>
+            void someFunction()<br>
+            {<br>
+            <span style="margin-left: 30px"><i>//your function code</i></span><br>
+            }<br>
+            <br>
+            static void someStaticFunction()<br>
+            {<br>
+            <span style="margin-left: 30px"><i>//your function code</i></span><br>
+            }<br>
+            endState<br>
+            <br>
+            void f1()<br>
+            {<br>
+            <span style="margin-left: 30px">someState::someStaticFunction();</span><br>
+            }
+        </div>
+        <p>Inside a state you can use your machine's variables or methods.
+        <p><u>Notice</u>: inside a state <b>this</b> points to state not to machine! Use thisMachine instead.
+        <p><div class="sourcecode">
+            class ExampleMachine : public StateMachine</br>
+            {<br>
+            #undef thisMachine<br>
+            #define thisMachine machine&#60;ExampleMachine&#62;()<br>
+            private:<br>
+            <div style="margin-left: 30px;">
+                int _value1;<br>
+                float _value2;<br>
+                <br>
+                void f1()<br>
+                {<br>
+                }<br>
+                <br>
+                beginState(<i>state name</i>)<br>
+                {<br>
+                <div  style="margin-left: 30px;">
+                    thisMachine->_value2 += static_cast<float>(thisMachine->_value1);<br>
+                    thisMachine->f1();<br>
+                </div>
+                }<br>
+                endState
+            </div>
+            };
+        </div>
+    </div>
+    <div>
+        <h2>Functions</h2>
+        <div>
+            <h3>States control functions</h3>
+            <p><b>pushState(<i>state name</i>)</b> - push new state to states stack. (use outside state function)
+            <p><b>pushStateI(<i>state name</i>)</b> - push new state to states stack. (use inside state function)
+            <p><b>popState()</b> - pop state from states stack. (use outside state function)
+            <p><b>popStateI()</b> - pop state from states stack. (use inside state function)
+            <p><b>setState(<i>state name</i>)</b> - clear states stack and push new state.
+            <p><b>clearStatesStack()</b> - clear states stack.
+        </div>
+        <div>
+            <h3>Machine functions</h3>
+            <p><b>update()</b> - update machine.
+        </div>
+        <div>
+            <h3>Virtual functions</h3>
+            <p>You can overload it if you need.
+            <p><b>everytime1()</b> - evaluates before current state function when update.
+            <p><b>everytime2()</b> - evaluates after current state function when update.
+        </div>
+    <div>
+        <h2>How to use it</h2>
+        <p>In this tutorial we create symple machine. It prints all numbers from min to max, than
+        print all number from max to min, one number on update.
+        <p>Example of output:
+        <p><div class="sourcecode">123456789987654321123456789</div>
+        <p>It has two states increasing and decreasing, private variables for min, max, and current value,
+        constructor with three arguments and
+        <p>Let's code it:
+        <ol>
+            <li><p>Derive our new class from StateMachine.
+            <p><div class="sourcecode">
+                class ExampleMachine : public StateMachine
+            </div>
+            <li><p>Define thisMachine. We must do it everytime when we derive class from StateMachine.<br>
+            Notice: template parameter must be same with class name.
+            <p><div class="sourcecode">
+                #undef thisMachine<br>
+                #define thisMachine machine&#60;ExampleMachine&#62;()
+            </div>
+            <li><p>Define our variables for min, max, and current value.
+            <p><div class="sourcecode">
+                private:<br>
+                <div style="margin-left: 30px;">
+                    int _min, _max;<br>
+                    int _currentValue;<br>
+                </div>
+            </div>
+            <li><p>Define <b>everytime1</b> function. It will be called on update before state function and prints current value.
+            <p><div class="sourcecode">
+                void everytime1()<br>
+                {<br>
+                <span style="margin-left: 30px;">std::cout << ((float)_currentValue) << " ";</span><br>
+                }
+            </div>
+            <li><p>Define states. Notice: we use <b>setStateI</b> with postfix <b>I</b> inside a state function.
+            <p><div class="sourcecode">
+                beginState(increasing)<br>
+                {<br>
+                <div style="margin-left: 30px;">
+                    //increase until reach max, go decreasing state<br>
+                    if (thisMachine->_currentValue >= thisMachine->_max)<br>
+                        <span style="margin-left: 30px;">thisMachine->setStateI(decreasing);</span><br>
+                    else<br>
+                        <span style="margin-left: 30px;">++ thisMachine->_currentValue;</span><br>
+                </div>
+                }<br>
+                endState<br>
+                <br>
+                beginState(decreasing)<br>
+                {<br>
+                <div style="margin-left: 30px;">
+                    //decrease until reach max, go increasing state<br>
+                    if (thisMachine->_currentValue <= thisMachine->_min)<br>
+                        <span style="margin-left: 30px;">thisMachine->setStateI(increasing);</span><br>
+                    else<br>
+                        <span style="margin-left: 30px;">-- thisMachine->_currentValue;</span><br>
+                </div>
+                }<br>
+                endState
+            </div>
+            <li><p>Define constructor.
+            <p><div class="sourcecode">
+                public:<br>
+                <div style="margin-left: 30px;">
+                    ExampleMachine(int value = 0, int min = 0, int max = 9) :<br>
+                    <span style="margin-left: 30px;">_min(min),</span><br>
+                    <span style="margin-left: 30px;">_max(max),</span><br>
+                    <span style="margin-left: 30px;">_currentValue(value)</span><br>
+                    {<br>
+                    <span style="margin-left: 30px;">setState(increasing);</span><br>
+                    }<br>
+                </div>
+            </div>
+            <li><p><b>main</b> function
+            <p><div class="sourcecode">
+                int main()<br>
+                {<br>
+                <div style="margin-left: 30px;">
+                    ExampleMachine machine(2, 1, 7);<br>
+                    for (int i = 0; i < 20; ++ i)<br>
+                        <span style="margin-left: 30px;">machine.update();</span>
+                </div>
+                }
+            </div>
+        </ol>
+        <p>You can download full code <a href="tutorial1.cpp">here</a>.
+</body>
+</html>
